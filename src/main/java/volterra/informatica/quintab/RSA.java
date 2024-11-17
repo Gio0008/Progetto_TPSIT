@@ -8,43 +8,49 @@ import java.security.SecureRandom;
 public class RSA {
     private static final Logger log = LogManager.getLogger(RSA.class);
 
-    private static BigInteger p, n, e, q, d, phi;
-
-    private final int bitLenght = 1024;
+    private static BigInteger n;
+    private static BigInteger e;
+    private static BigInteger d;
 
     public RSA() {
 
         //generazione di due numeri primi grandi
         SecureRandom rand = new SecureRandom();
-        p = BigInteger.probablePrime(bitLenght / 2, rand);
-        log.info("Generated prime number p: " + p);
-        q = BigInteger.probablePrime(bitLenght / 2, rand);
-        log.info("Generated prime number q: " + q);
+        int bitLenght = 1024;
+        BigInteger p = BigInteger.probablePrime(bitLenght / 2, rand);
+        log.info("Generated prime number p: {}", p);
+        BigInteger q = BigInteger.probablePrime(bitLenght / 2, rand);
+        log.info("Generated prime number q: {}", q);
 
         //prodotto p*q
         n = p.multiply(q);
-        log.info("Generated n: " + n);
+        log.info("Generated n: {}", n);
 
         //(p-1)(q-1)
-        phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
-        log.info("Generated phi: " + phi);
+        BigInteger phi = p.subtract(BigInteger.ONE).multiply(q.subtract(BigInteger.ONE));
+        log.info("Generated phi: {}", phi);
 
         //esponente pubblico
-        e = new BigInteger(phi.bitLength(), rand);
+        do e = new BigInteger(phi.bitLength(), rand);
         while (e.compareTo(BigInteger.ONE) <= 0 || e.compareTo(phi) >= 0 || !e.gcd(phi).equals(BigInteger.ONE)) ;
-        log.info("Generated e: " + e);
+        log.info("Generated e: {}", e);
 
         //esponente privato
         d = e.modInverse(phi);
-        log.info("Generated d: " + d);
+        log.info("Generated d: {}", d);
     }
 
-    public static BigInteger encryption(BigInteger message) {
-        return message.modPow(e, n);
+    public BigInteger encryption(String message) {
+        BigInteger crypted = new BigInteger(message.getBytes()).modPow(e, n);
+        return crypted;
     }
 
-    public static BigInteger decryption(BigInteger message) {
+    public BigInteger decryption(BigInteger message) {
         return message.modPow(d, n);
+    }
+
+    public String decryptionToString(BigInteger crypted){
+        return new String(crypted.modPow(d, n).toByteArray());
     }
 
 }
